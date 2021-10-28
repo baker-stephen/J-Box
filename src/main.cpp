@@ -1,5 +1,7 @@
 #include "display.h"
 #include "gps.h"
+#include <U8g2lib.h>
+
 void setup() {
   // put your setup code here, to run once:
   initializeDisplay();
@@ -10,6 +12,10 @@ void setup() {
 }
 
 void loop() {
+  for (int i = 0; i<100; i++) {
+    drawMph(i);
+  }
+  
   // put your main code here, to run repeatedly:
   // toDo have simple setup screen function to walk user through setup options
   // fetch data from diffrent sources and display it to the user on screens

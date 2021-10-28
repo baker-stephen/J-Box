@@ -9,6 +9,7 @@ void gpsScreen();
 void enduranceLayout();
 void naughtTo60Screen();
 void initializeDisplay();
+void drawMph(int mph);
 #define YP A3  // must be an analog pin, use "An" notation!
 #define XM A8  // must be an analog pin, use "An" notation!
 #define YM A1  // can be a digital pin

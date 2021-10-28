@@ -27,6 +27,7 @@ void initializeDisplay()
     u8g2.drawStr(32,20,"Booting Up");
     u8g2.sendBuffer();
 }
+
 void menuScreen()
 {
     u8g2.clearBuffer();
@@ -60,61 +61,97 @@ void drawPartialCircle(int xo, int yo, double radius, double initialAngle, doubl
 
 //Draws a circular gauge with a "needle" at some proportion of a maximum
 void drawGauge(int xo, int yo, int rad, double maxValue, double currentValue) {
-    double initAngle = M_PI*(3.0/4.0);
-    double finalAngle = M_PI*(9.0/4.0);
+    double initAngle = M_PI*(1.0/4.0);
+    double finalAngle = M_PI*(7.0/4.0);
     drawPartialCircle(xo,yo,rad*1.0,initAngle,finalAngle);
     double angle = (currentValue/maxValue)*(finalAngle-initAngle)+initAngle;
-    //needle
-    u8g2.drawLine(xo,yo,xo+int(rad*cos(angle)),yo+int(rad*sin(angle)));
+    //needle 3 pixels thick
+    for (int i = -1; i<=1; i++) {
+        for (int j = -1; j<=1; j++) {
+            u8g2.drawLine(xo+i,yo+j,xo+int(rad*cos(angle))+i,yo+int(rad*sin(angle))+j);
+        }
+    }
+    // u8g2.drawLine(xo-1,yo-1,xo+int(rad*cos(angle))-1,yo+int(rad*sin(angle))-1);
+    // u8g2.drawLine(xo,yo,xo+int(rad*cos(angle)),yo+int(rad*sin(angle)));
+    // u8g2.drawLine(xo+1,yo+1,xo+int(rad*cos(angle))+1,yo+int(rad*sin(angle))+1);
     //markers and labels
     u8g2.setFont(u8g2_font_chroma48medium8_8n);
     int i = 0;
-    for (double angle = initAngle; angle<=finalAngle; angle = angle + (finalAngle-initAngle)/10.0){
+    int numNotches = maxValue/1000;
+    for (double angle = initAngle; angle<=finalAngle; angle = angle + (finalAngle-initAngle)/numNotches){
         u8g2.drawLine(xo+int(rad*.85*cos(angle)),yo+int(rad*.85*sin(angle)),xo+int(rad*cos(angle)),yo+int(rad*sin(angle)));
-        u8g2.drawStr(xo+int(rad*.85*cos(angle)),yo+int(rad*.85*sin(angle)),String(i).c_str());
+        u8g2.drawStr(xo+int(rad*.85*cos(angle)-8.0/sqrt(2)),yo+int(rad*.85*sin(angle)+8.0/sqrt(2)),String(i).c_str());
         i = i+1;
     }
 }
 
-int mph = 99;
-String gear = "2";
-int rpm = 6000;
-int coolantTemp = 109;
-int engineTemp = 120;
-int fuelLevel = 100;
-int lapTime[3] = {1,23,45};
-int screenx = 240;
-int screeny = 128;
-void enduranceLayout() {
-    u8g2.clearBuffer();
-    u8g2.setFont(u8g2_font_logisoso50_tr);
-    u8g2.drawStr(screenx/4,screeny/2+25,gear.c_str());
-    u8g2.drawFrame(screenx/4-3,screeny/2-30,38,60);
+void drawCircularBarGauge(int xo, int yo, int rad, double maxValue, double currentValue) {
+    double initAngle = M_PI*(1.0/4.0);
+    double finalAngle = M_PI*(7.0/4.0);
+    double currentAngle = (currentValue/maxValue)*(finalAngle-initAngle)+initAngle;
+    for (double angle = initAngle; angle<=currentAngle; angle = angle + .001){
+        double lin = (currentValue / maxValue) / 2;
+        u8g2.drawLine(xo+int(rad*lin*cos(angle)),yo+int(rad*lin*sin(angle)),xo+int(rad*cos(angle)),yo+int(rad*sin(angle)));
+    }
+}
+
+void drawGear(int screenx, int screeny, String gear){
+    u8g2.setFont(u8g2_font_logisoso58_tf);
+    u8g2.drawStr(screenx/3,screeny/2+31,gear.c_str());
+    u8g2.drawFrame(screenx/3-4,screeny/2-32,46,68);
+}
+
+void drawMph(int mph) {
+    u8g2.setDrawColor(0);
+    u8g2.drawBox(0,0,40,31);
+    u8g2.setDrawColor(1);
     u8g2.setFont(u8g2_font_logisoso30_tr);
     if (mph<10) {
         u8g2.drawStr(20,30,String(mph).c_str());
     } else {
         u8g2.drawStr(0,30,String(mph).c_str());
     }
+    u8g2.sendBuffer();
+}
 
-    u8g2.setFont(u8g2_font_VCR_OSD_mf); //u8g2_font_9x15B_mr
-    int fontx = 12;
-    int fonty = 15;
-    u8g2.drawStr(40,fonty,"mph");
-    u8g2.drawStr(140,fonty,String(rpm).c_str());
-    u8g2.drawStr(screenx - fontx*3,fonty,"rpm");
+void drawRpm(int fonty, int rpm) {
+    u8g2.setFont(u8g2_font_logisoso30_tr);
+    if (rpm<10000) {
+        u8g2.drawStr(130,30,String(rpm/1000).c_str());
+    } else {
+        u8g2.drawStr(110,30,String(rpm/1000).c_str());
+    }
+    u8g2.setFont(u8g2_font_VCR_OSD_mf);
+    u8g2.drawStr(150,fonty,String(rpm%1000).c_str());
+}
+
+void drawCoolantTemp(int screenx, int screeny, int fontx, int fonty, int coolantTemp) {
+    u8g2.setFont(u8g2_font_VCR_OSD_mf);
     u8g2.drawStr(0,screeny-fonty,String(coolantTemp).c_str());
-    u8g2.drawStr(fontx*3,screeny-fonty,"C");
+}
+void drawEngineTemp(int screenx, int screeny, int fontx, int fonty, int engineTemp) {
+    u8g2.setFont(u8g2_font_VCR_OSD_mf);
     u8g2.drawStr(0,screeny,String(engineTemp).c_str());
-    u8g2.drawStr(fontx*3,screeny,"C");
-    u8g2.drawStr((screenx/2)-fontx*2,screeny,String(fuelLevel).c_str());
-    u8g2.drawStr((screenx/2)+fontx,screeny,"%");
+}
+
+void drawFuel(int screenx, int screeny, int fontx, int fonty, int fuelLevel) {
+    u8g2.setFont(u8g2_font_VCR_OSD_mf);
+    if (fuelLevel>=100){
+        u8g2.drawStr((screenx/2)-fontx*(7/2),screeny,String(fuelLevel).c_str());
+    } else if (fuelLevel>10) {
+        u8g2.drawStr((screenx/2)-fontx*(5/2),screeny,String(fuelLevel).c_str());
+    } else {
+        u8g2.drawStr((screenx/2)-fontx*(3/2),screeny,String(fuelLevel).c_str());
+    }
+}
+
+void drawLapTime(int screenx, int screeny, int fontx, int fonty, int *lapTime){
+    u8g2.setFont(u8g2_font_VCR_OSD_mf);
     if (lapTime[0]<10) {
         u8g2.drawStr(screenx-fontx*7,screeny,String(lapTime[0]).c_str());
     } else {
         u8g2.drawStr(screenx-fontx*8,screeny,String(lapTime[0]).c_str());
     }
-    u8g2.drawStr(screenx-fontx*6,screeny,":");
     if (lapTime[1]<10) {
         u8g2.drawStr(screenx-fontx*5,screeny,"0");
         u8g2.drawStr(screenx-fontx*4,screeny,String(lapTime[1]).c_str());
@@ -122,7 +159,6 @@ void enduranceLayout() {
     else {
         u8g2.drawStr(screenx-fontx*5,screeny,String(lapTime[1]).c_str());
     }
-    u8g2.drawStr(screenx-fontx*3,screeny,":");
     if (lapTime[2]<10) {
         u8g2.drawStr(screenx-fontx*2,screeny,"0");
         u8g2.drawStr(screenx-fontx*1,screeny,String(lapTime[2]).c_str());
@@ -130,7 +166,69 @@ void enduranceLayout() {
     else {
         u8g2.drawStr(screenx-fontx*2,screeny,String(lapTime[2]).c_str());
     }
-    drawGauge(screenx-55,screeny/2+5,50,10000.0,rpm*1.0);
+}
+
+void drawVoltage(int screenx, int screeny, int fontx, int fonty, double battVoltage) {
+    u8g2.setFont(u8g2_font_VCR_OSD_mf);
+    u8g2.drawStr(0,screeny/2+fonty/2,String(int(battVoltage)).c_str());
+    u8g2.drawStr(fontx*2,screeny/2+fonty/2,".");
+    int firstDecimal = int((battVoltage-int(battVoltage))*10 + 0.5);
+    u8g2.drawStr(fontx*3,screeny/2+fonty/2,String(firstDecimal).c_str());
+}
+
+void drawBackground() {
+    int screenx = 240;
+    int screeny = 128;
+    u8g2.setFont(u8g2_font_VCR_OSD_mf);
+    int fontx = 12;
+    int fonty = 15;
+
+    u8g2.drawFrame(screenx/3-4,screeny/2-32,46,68);
+    
+    u8g2.drawStr(40,fonty,"mph");
+    
+    u8g2.drawStr(screenx - fontx*3,fonty,"rpm");
+
+    u8g2.drawStr(fontx*3,screeny-fonty,"C");
+
+    u8g2.drawStr(fontx*3,screeny,"C");
+    
+    u8g2.drawStr((screenx/2),screeny,"%");
+
+    u8g2.drawStr(screenx-fontx*6,screeny,":");
+
+    u8g2.drawStr(screenx-fontx*3,screeny,":");
+
+    u8g2.drawStr(fontx*4,screeny/2+fonty/2,"V");
+}
+
+void enduranceLayout() {
+    int mph = 69;
+    String gear = "3";
+    int rpm = 11420;
+    int coolantTemp = 109;
+    int engineTemp = 120;
+    int fuelLevel = 42;
+    int lapTime[3] = {1,23,45};
+    double battVoltage = 11.572345;
+    int screenx = 240;
+    int screeny = 128;
+    int fontx = 12;
+    int fonty = 15;
+
+    u8g2.clearBuffer();
+    
+    drawBackground();
+
+    drawGauge(screenx-55,screeny/2+5,50,12000.0,rpm*1.0);
+    drawGear(screenx,screeny,gear);
+    drawMph(mph);
+    drawRpm(fonty, rpm);
+    drawCoolantTemp(screenx,screeny,fontx,fonty,coolantTemp);
+    drawEngineTemp(screenx,screeny,fontx,fonty,engineTemp);
+    drawFuel(screenx,screeny,fontx,fonty,fuelLevel);
+    drawLapTime(screenx,screeny,fontx,fonty,lapTime);
+    drawVoltage(screenx,screeny,fontx,fonty,battVoltage);
     u8g2.sendBuffer();
 }
 
