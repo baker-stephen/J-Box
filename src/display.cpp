@@ -95,7 +95,7 @@ void drawCircularBarGauge(int xo, int yo, int rad, double maxValue, double curre
     double finalAngle = M_PI*(7.0/4.0);
     double currentAngle = (currentValue/maxValue)*(finalAngle-initAngle)+initAngle;
     for (double angle = initAngle; angle<=currentAngle; angle = angle + .001){
-        double lin = (currentValue / maxValue) / 2;
+        double lin = (currentValue / maxValue) / 2.0;
         u8g2.drawLine(xo+int(rad*lin*cos(angle)),yo+int(rad*lin*sin(angle)),xo+int(rad*cos(angle)),yo+int(rad*sin(angle)));
     }
 }
@@ -241,6 +241,39 @@ void circularGaugeLayout() {
     u8g2.sendBuffer();
 }
 
+void drawBackground2() {
+
+    int screenx = 240;
+    int screeny = 128;
+    u8g2.setFont(u8g2_font_VCR_OSD_mf);
+    int fontx = 12;
+    int fonty = 15;
+
+    u8g2.drawFrame(screenx/3-4,screeny/2-32,46,68);
+    
+    u8g2.drawStr(40,fonty,"mph");
+    
+    u8g2.drawStr(screenx - fontx*3,fonty,"rpm");
+
+    u8g2.drawStr(fontx*3,screeny-fonty,"C");
+
+    u8g2.drawStr(fontx*3,screeny,"C");
+    
+    u8g2.drawStr((screenx/2),screeny,"%");
+
+    u8g2.drawStr(screenx-fontx*6,screeny,":");
+
+    u8g2.drawStr(screenx-fontx*3,screeny,":");
+
+    u8g2.drawStr(fontx*4,screeny/2+fonty/2,"V");
+
+}
+
+void drawBoxGauge(int current, int max) {
+    u8g2.drawFrame(0,0,screenx,screeny/5);
+    u8g2.drawBox(0,0,int(screenx*(float(current)/float(max))),screeny/5);
+    u8g2.sendBuffer();
+}
 
 // void displayGPSbootup()
 // {

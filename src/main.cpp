@@ -12,8 +12,8 @@ void setup() {
   // put your setup code here, to run once:
   initializeDisplay();
   circularGaugeLayout();
-  // Serial.begin(9600);
-  // Serial.println("test");
+  Serial.begin(9600);
+  Serial.println("test");
   pinMode(LED_BUILTIN,OUTPUT);
   lastMphUpdate = 0;
   lastRpmUpdate = 0;
@@ -22,22 +22,24 @@ void setup() {
 }
 
 void loop() {
-  if (millis()-lastMphUpdate>500){
-    if (mph==99) {
-      mph = 0;
-    } else {
-      mph++;
-    }
-    drawMph(mph);
-    lastMphUpdate = millis();
-  }
+  
+  // if (millis()-lastMphUpdate>500){
+  //   if (mph==99) {
+  //     mph = 0;
+  //   } else {
+  //     mph++;
+  //   }
+  //   drawMph(mph);
+  //   lastMphUpdate = millis();
+  // }
 
   if (rpm==12000) {
       rpm = 0;
   } else {
     rpm+=100;    
   }
-  drawRpm(rpm);
+  drawBoxGauge(rpm, 12000);
+  Serial.println(rpm);
   // put your main code here, to run repeatedly:
   // toDo have simple setup screen function to walk user through setup options
   // fetch data from diffrent sources and display it to the user on screens
