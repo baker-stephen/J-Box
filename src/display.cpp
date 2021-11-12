@@ -100,21 +100,33 @@ void drawCircularBarGauge(int xo, int yo, int rad, double maxValue, double curre
     }
 }
 
+void clearBox(int x0, int y0, int w, int h) {
+    //TODO: replace all appearances of the below with this method
+    u8g2.setDrawColor(0);
+    u8g2.drawBox(x0,y0,w,h);
+    u8g2.setDrawColor(1);
+}
+
 void drawGear(String gear){
+    int w = 45;
+    int h = 68;
+    int x0 = screenx/2-w/2;
+    int y0 = screeny/2-23;
+    clearBox(x0,y0,w,h);
     u8g2.setFont(u8g2_font_logisoso58_tf);
-    u8g2.drawStr(screenx/3,screeny/2+31,gear.c_str());
-    u8g2.drawFrame(screenx/3-4,screeny/2-32,46,68);
+    u8g2.drawStr(x0+4,y0+63,gear.c_str());
+    u8g2.drawFrame(x0,y0,w,h);
 }
 
 void drawMph(int mph) {
-    u8g2.setDrawColor(0);
-    u8g2.drawBox(0,0,40,31);
-    u8g2.setDrawColor(1);
+    int x0 = 15;
+    int y0 = screeny/2+30;
+    clearBox(x0,y0-30,40,31);
     u8g2.setFont(u8g2_font_logisoso30_tr);
     if (mph<10) {
-        u8g2.drawStr(20,30,String(mph).c_str());
+        u8g2.drawStr(x0+20,y0,String(mph).c_str());
     } else {
-        u8g2.drawStr(0,30,String(mph).c_str());
+        u8g2.drawStr(x0,y0,String(mph).c_str());
     }
     u8g2.sendBuffer();
 }
@@ -269,9 +281,63 @@ void drawBackground2() {
 
 }
 
-void drawBoxGauge(int current, int max) {
-    u8g2.drawFrame(0,0,screenx,screeny/5);
-    u8g2.drawBox(0,0,int(screenx*(float(current)/float(max))),screeny/5);
+void boxLayout() {
+
+}
+
+void drawBoxGauge(int current, int max, int cutoff) {
+    int padding = 2;
+    int xStart = padding;
+    int yStart = padding;
+    int width = screenx-2*padding-40;
+    int height = screeny/5;
+    int redLine = 10000;
+
+    u8g2.setDrawColor(0);
+    u8g2.drawBox(xStart,yStart,screenx-xStart,height);
+    u8g2.setDrawColor(1);
+    u8g2.drawFrame(xStart,yStart,width,height);
+
+    int cutoffWidth = int(width*(float(cutoff/2.0)/float(max)));
+
+    if (current <= cutoff) {
+        u8g2.drawBox(xStart,yStart,int(width*(float(current/2.0)/float(max))),height);
+    } else {
+        u8g2.drawBox(xStart,yStart,cutoffWidth,height);
+        u8g2.drawBox(xStart+cutoffWidth,yStart,int((width-cutoffWidth)*(float(current - cutoff)/float(max - cutoff))),height);
+    }
+    for (int i = 0; i<=max; i+=1000) {
+        int offset;
+        if (i<=cutoff) {
+            offset=int((float(i)/float(max))*width)/2;
+        } else {
+            offset=cutoffWidth+int((float(i-cutoff)/float(max-cutoff))*(width-cutoffWidth));
+        }
+        if (i==redLine) {
+            u8g2.drawVLine(xStart + offset, yStart, 5+height);
+        } else {
+            u8g2.drawVLine(xStart + offset, yStart+height, 5);
+        }
+        u8g2.setFont(u8g2_font_bitcasual_tn);
+        int xfontoff = (i<10000) ? 2 : 5;
+        u8g2.drawStr(xStart + offset - xfontoff, yStart+height+5+8,String(i/1000).c_str());
+    }
+    u8g2.setFont(u8g2_font_logisoso18_tf);
+    int newFontx = 11;
+    int yOff = 2;
+    int xOff = 2;
+    if (current<10000) {
+        clearBox(screenx/2+30,screeny/2-23,15,63);
+        u8g2.drawStr(xStart+width+xOff,yStart+height-yOff,"0");
+        u8g2.drawStr(xStart+width+newFontx+xOff,yStart+height-yOff,String(current/1000).c_str());
+    } else {
+        u8g2.drawStr(xStart+width+xOff,yStart+height-yOff,String(current/1000).c_str());
+        u8g2.setFont(u8g2_font_logisoso58_tf);
+        u8g2.drawStr(screenx/2+23,screeny/2-23+63,"!");
+        u8g2.setFont(u8g2_font_logisoso18_tf);
+    }
+    u8g2.drawStr(xStart+width+2*newFontx+xOff,yStart+height-yOff,".");
+    u8g2.drawStr(xStart+width+3*newFontx+xOff-6,yStart+height-yOff,String((current%1000)/100).c_str());
     u8g2.sendBuffer();
 }
 
