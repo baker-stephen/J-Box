@@ -111,7 +111,7 @@ void drawGear(String gear){
     int w = 45;
     int h = 68;
     int x0 = screenx/2-w/2;
-    int y0 = screeny/2-23;
+    int y0 = screeny/2-21;
     clearBox(x0,y0,w,h);
     u8g2.setFont(u8g2_font_logisoso58_tf);
     u8g2.drawStr(x0+4,y0+63,gear.c_str());
@@ -119,8 +119,8 @@ void drawGear(String gear){
 }
 
 void drawMph(int mph) {
-    int x0 = 15;
-    int y0 = screeny/2+30;
+    int x0 = 12;
+    int y0 = screeny/2+20;
     clearBox(x0,y0-30,40,31);
     u8g2.setFont(u8g2_font_logisoso30_tr);
     if (mph<10) {
@@ -150,27 +150,40 @@ void drawRpm(int rpm) {
 }
 
 void drawCoolantTemp(int coolantTemp) {
+    int x0 = (coolantTemp>=100) ? 0 : fontx;
+    int y0 = screeny-fonty;
+    clearBox(x0,y0-fonty,fontx*(2+(coolantTemp/100)),fonty);
     u8g2.setFont(u8g2_font_VCR_OSD_mf);
-    u8g2.drawStr(0,screeny-fonty,String(coolantTemp).c_str());
+    u8g2.drawStr(x0,y0,String(coolantTemp).c_str());
 }
 void drawEngineTemp(int engineTemp) {
+    int x0 = (engineTemp>=100) ? 0 : fontx;
+    int y0 = screeny;
+    clearBox(x0,y0-fonty,fontx*(2+(engineTemp/100)),fonty);
     u8g2.setFont(u8g2_font_VCR_OSD_mf);
-    u8g2.drawStr(0,screeny,String(engineTemp).c_str());
+    u8g2.drawStr(x0,y0,String(engineTemp).c_str());
 }
 
 void drawFuel(int fuelLevel) {
     u8g2.setFont(u8g2_font_VCR_OSD_mf);
+    int x0 = (screenx/2)-fontx*(9/2);
+    int y0 = screeny;
+    clearBox(x0,y0-fonty,fontx*3,fonty);
+    const char *fuelStr = String(fuelLevel).c_str();
     if (fuelLevel>=100){
-        u8g2.drawStr((screenx/2)-fontx*(7/2),screeny,String(fuelLevel).c_str());
+        u8g2.drawStr(x0,y0,fuelStr);
     } else if (fuelLevel>10) {
-        u8g2.drawStr((screenx/2)-fontx*(5/2),screeny,String(fuelLevel).c_str());
+        u8g2.drawStr(x0+fontx,y0,fuelStr);
     } else {
-        u8g2.drawStr((screenx/2)-fontx*(3/2),screeny,String(fuelLevel).c_str());
+        u8g2.drawStr(x0+2*fontx,y0,fuelStr);
     }
 }
 
 void drawLapTime(int *lapTime){
     u8g2.setFont(u8g2_font_VCR_OSD_mf);
+    for (int i=0;i<3;i++) {
+        clearBox(screenx-fontx*8 +fontx*i*3,screeny-fonty,fontx*2,fonty);
+    }
     if (lapTime[0]<10) {
         u8g2.drawStr(screenx-fontx*7,screeny,String(lapTime[0]).c_str());
     } else {
@@ -194,10 +207,17 @@ void drawLapTime(int *lapTime){
 
 void drawVoltage(double battVoltage) {
     u8g2.setFont(u8g2_font_VCR_OSD_mf);
-    u8g2.drawStr(0,screeny/2+fonty/2,String(int(battVoltage)).c_str());
-    u8g2.drawStr(fontx*2,screeny/2+fonty/2,".");
-    int firstDecimal = int((battVoltage-int(battVoltage))*10 + 0.5);
-    u8g2.drawStr(fontx*3,screeny/2+fonty/2,String(firstDecimal).c_str());
+    int x0 = screenx-fontx*5 + fontx/2;
+    int y0 = screeny-fonty;
+    clearBox(x0,y0-fonty,fontx*4 - fontx/2, fonty);
+    u8g2.setFontMode(1);
+    int tensOffset = (battVoltage<10) ? fontx : 0;
+    u8g2.drawStr(x0+tensOffset,y0,String(int(battVoltage)).c_str());
+    int firstDecimal = int(battVoltage*10.0) % 10;
+    u8g2.drawStr(x0+fontx*3-fontx/2,y0,String(firstDecimal).c_str());
+    u8g2.drawStr(x0+fontx*2-fontx/4,y0,".");
+    u8g2.setFontMode(0);
+
 }
 
 void drawBackground() {
@@ -260,28 +280,20 @@ void drawBackground2() {
     u8g2.setFont(u8g2_font_VCR_OSD_mf);
     int fontx = 12;
     int fonty = 15;
-
-    u8g2.drawFrame(screenx/3-4,screeny/2-32,46,68);
     
-    u8g2.drawStr(40,fonty,"mph");
+    u8g2.drawStr(52,screeny/2+20,"mph");
     
-    u8g2.drawStr(screenx - fontx*3,fonty,"rpm");
-
     u8g2.drawStr(fontx*3,screeny-fonty,"C");
 
     u8g2.drawStr(fontx*3,screeny,"C");
     
-    u8g2.drawStr((screenx/2),screeny,"%");
+    u8g2.drawStr((screenx/2)-fontx,screeny,"%");
 
     u8g2.drawStr(screenx-fontx*6,screeny,":");
 
     u8g2.drawStr(screenx-fontx*3,screeny,":");
 
-    u8g2.drawStr(fontx*4,screeny/2+fonty/2,"V");
-
-}
-
-void boxLayout() {
+    u8g2.drawStr(screenx-fontx,screeny-fonty,"V");
 
 }
 
@@ -318,6 +330,9 @@ void drawBoxGauge(int current, int max, int cutoff) {
         } else {
             u8g2.drawVLine(xStart + offset, yStart+height, 5);
         }
+        if (i%2000!=0 && i<=cutoff) {
+            continue;
+        }
         u8g2.setFont(u8g2_font_bitcasual_tn);
         int xfontoff = (i<10000) ? 2 : 5;
         u8g2.drawStr(xStart + offset - xfontoff, yStart+height+5+8,String(i/1000).c_str());
@@ -326,14 +341,14 @@ void drawBoxGauge(int current, int max, int cutoff) {
     int newFontx = 11;
     int yOff = 2;
     int xOff = 2;
-    if (current<10000) {
-        clearBox(screenx/2+30,screeny/2-23,15,63);
+    if (current<redLine) {
+        clearBox(screenx/2+25,screeny/2+29-32,screenx/2,33);
         u8g2.drawStr(xStart+width+xOff,yStart+height-yOff,"0");
         u8g2.drawStr(xStart+width+newFontx+xOff,yStart+height-yOff,String(current/1000).c_str());
     } else {
         u8g2.drawStr(xStart+width+xOff,yStart+height-yOff,String(current/1000).c_str());
-        u8g2.setFont(u8g2_font_logisoso58_tf);
-        u8g2.drawStr(screenx/2+23,screeny/2-23+63,"!");
+        u8g2.setFont(u8g2_font_logisoso32_tf);
+        u8g2.drawStr(screenx/2+25,screeny/2+29,"SHIFT");
         u8g2.setFont(u8g2_font_logisoso18_tf);
     }
     u8g2.drawStr(xStart+width+2*newFontx+xOff,yStart+height-yOff,".");
