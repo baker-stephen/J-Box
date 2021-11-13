@@ -10,6 +10,7 @@ unsigned long lastVoltUpdate;
 unsigned long lastFuelUpdate;
 unsigned long lastLapTimeUpdate;
 unsigned long lapTimeStart;
+unsigned long lastGearUpdate;
 // unsigned long lastTimeUpdate;
 int mph=0;
 int rpm=0;
@@ -19,6 +20,9 @@ int coolantTemp = 90;
 int engineTemp = 90;
 int fuelLevel = 100;
 double battVoltage = 11.5;
+String gears[6] = {"N","1","2","3","4","5"};
+int gIndex = 0;
+int gearDir = 1;
 
 void setup() {
   // put your setup code here, to run once:
@@ -36,10 +40,11 @@ void setup() {
   lastVoltUpdate = 0;
   lastFuelUpdate = 0;
   lastLapTimeUpdate = 0;
+  lastGearUpdate = 0;
   lapTimeStart = millis();
   drawBackground2();
-  drawGear("N");
-  
+  drawBoxGauge(rpm, 12000, cutoff);
+  drawGear(gears[gIndex]);
   drawCoolantTemp(coolantTemp);
   drawEngineTemp(engineTemp);
   drawFuel(fuelLevel);
@@ -113,6 +118,18 @@ void loop() {
     drawEngineTemp(coolantTemp);
     lastETempUpdate = millis();
   }
+
+  if (millis()-lastGearUpdate>6000){
+    if (gIndex<=0) {
+      gearDir = 1;
+    } else if (gIndex>=5) {
+      gearDir = -1;
+    }
+    drawGear(gears[gIndex]);
+    gIndex+=gearDir;
+    lastGearUpdate = millis();
+  }
+
 
   // put your main code here, to run repeatedly:
   // toDo have simple setup screen function to walk user through setup options
