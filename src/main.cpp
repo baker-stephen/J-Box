@@ -6,10 +6,15 @@ void setup() {
   enduranceLayout();
   // Serial.begin(9600);
   // Serial.println("test");
+  // pinMode(LED_BUILTIN, OUTPUT);
   
 }
 
 void loop() {
+  // digitalWrite(LED_BUILTIN, HIGH);
+  // delay(100);
+  // digitalWrite(LED_BUILTIN, LOW);
+  // delay(100);
   // put your main code here, to run repeatedly:
   // toDo have simple setup screen function to walk user through setup options
   // fetch data from diffrent sources and display it to the user on screens
